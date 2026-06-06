@@ -243,6 +243,15 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 .fg label{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .fg input,.fg select{padding:11px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:9px;color:var(--ink)}
 .fg input:focus,.fg select:focus{outline:none;border-color:var(--leather);box-shadow:0 0 0 3px rgba(224,164,88,.14)}
+/* native date pickers — visible calendar icon on dark theme + whole field opens the calendar */
+input[type="date"]{cursor:pointer}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.78) brightness(1.4);cursor:pointer;opacity:.85;padding:2px}
+input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1}
+/* horizon caption shown on every data tab so the link to the selector is explicit */
+.horizon-note{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:2px 0 12px;
+  background:rgba(224,164,88,.06);border:1px solid rgba(224,164,88,.16);border-radius:9px;padding:8px 12px}
+.horizon-note b{color:var(--leather-bright);font-weight:600}
+.horizon-note svg{width:15px;height:15px;color:var(--leather)}
 .btn-ghost{padding:11px 18px;border-radius:10px;font-weight:600;font-size:13px;background:var(--panel3);border:1px solid var(--border);color:var(--ink2)}
 .btn-ghost:hover{border-color:var(--border2)}
 .btn-go{padding:11px 20px;border-radius:10px;font-weight:700;font-size:13px;background:linear-gradient(135deg,var(--leather),var(--leather-dim));color:#19130A}
@@ -401,6 +410,7 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
       </div>
       <div class="readonly-banner" id="roBanner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> You are viewing in read-only mode. Unlock the <b>Planning</b> role (top-right) to add or update plans and production.</div>
       <div class="help-row" id="roleHelp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span id="roleHelpTxt"></span></div>
+      <div class="horizon-note" id="boardHorizonNote"></div>
       <div class="tbl-scroll"><table id="boardTable"><thead id="boardHead"></thead><tbody id="boardBody"></tbody></table></div>
     </section>
 
@@ -431,9 +441,10 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
         <button class="add-btn" id="btnLogProd" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg> Log output</button>
       </div>
       <div class="help-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>Push data in any cadence — type a single day, paste a batch, or import an Excel/CSV/Google Sheet export. See the <b>Reports &amp; Export</b> tab for templates and the Google Sheet sync.</span></div>
+      <div class="horizon-note" id="prodHorizonNote"></div>
       <div class="panel">
         <div class="panel-head"><div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Production log</div>
-          <input type="date" id="prodDateFilter" class="fg" style="padding:8px 11px;background:var(--bg);border:1px solid var(--border2);border-radius:9px;color:var(--ink)">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Jump to a day</span><input type="date" id="prodDateFilter" class="fg" style="padding:8px 11px;background:var(--bg);border:1px solid var(--border2);border-radius:9px;color:var(--ink)"><button class="mini-btn" id="prodDateClear" type="button">All</button></div>
         </div>
         <div class="tbl-scroll"><table id="prodTable"><thead><tr>
           <th>Date</th><th>PO / Article</th><th>Buyer</th><th>Line</th><th class="num">Daily target</th><th class="num">Produced</th><th class="num">Efficiency</th><th></th>
@@ -695,6 +706,20 @@ function horizonBuckets(forward){
   return b;
 }
 
+/* one shared time-window for the active horizon (drives every tab) */
+const HZ_LABEL={daily:"daily",weekly:"weekly",monthly:"monthly",quarterly:"quarterly",yearly:"yearly"};
+const HZ_SPAN ={daily:"7 days",weekly:"14 days",monthly:"30 days",quarterly:"13 weeks",yearly:"12 months"};
+function horizonWindow(forward){
+  const b=horizonBuckets(forward);
+  return { start:b[0].start, end:b[b.length-1].end, label:HZ_LABEL[state.horizon], span:HZ_SPAN[state.horizon] };
+}
+/* orders whose active window overlaps the forward horizon (overdue-but-open always included) */
+function ordersInHorizon(){
+  const w=horizonWindow(true), today=sod(new Date());
+  return DB.orders.filter(o=>{ const s=parseD(o.start), d=parseD(o.delivery);
+    return (s<w.end && d>=today) || (d<today && needToProduce(o)>0); });
+}
+
 /* ================== AUTH + IDLE LOCK ================== */
 let idleTimer=null;
 function startIdle(){ resetIdle(); ["mousemove","keydown","click","scroll","touchstart"].forEach(ev=>document.addEventListener(ev,resetIdle,{passive:true})); }
@@ -765,31 +790,32 @@ function toast(msg,type){
 /* ================== RENDER: COMMAND DECK ================== */
 let charts={};
 function renderDeck(){
-  const totalOrders=DB.orders.length;
-  const totalPairs=DB.orders.reduce((a,o)=>a+o.pairs,0);
-  const totalProd=DB.orders.reduce((a,o)=>a+produced(o.id),0);
-  const totalNeed=DB.orders.reduce((a,o)=>a+needToProduce(o),0);
-  const pct=totalPairs?Math.round(totalProd/totalPairs*100):0;
-  // overbooked / vacant lines (today + next 14d horizon scan)
   const win=horizonBuckets(true);
+  const scope=ordersInHorizon();                 // same set the Order Plan Board shows
+  const totalOrders=scope.length;
+  const totalPairs=scope.reduce((a,o)=>a+o.pairs,0);
+  const totalProd=scope.reduce((a,o)=>a+produced(o.id),0);
+  const totalNeed=scope.reduce((a,o)=>a+needToProduce(o),0);
+  const pct=totalPairs?Math.round(totalProd/totalPairs*100):0;
+  // overbooked / vacant lines across the horizon window
   let overLines=new Set(), busyLines=new Set();
   DB.lines.forEach(l=>{
     let d=sod(new Date()),end=win[win.length-1].end;
     while(d<end){ const c=committedOnDay(l.id,d); if(c>0)busyLines.add(l.id); if(c>l.cap)overLines.add(l.id); d=addD(d,1);}
   });
   const vacant=DB.lines.filter(l=>!busyLines.has(l.id)).length;
-  const onTrack=DB.orders.filter(o=>["ontrack","complete"].includes(orderStatus(o).key)).length;
+  const onTrack=scope.filter(o=>["ontrack","complete"].includes(orderStatus(o).key)).length;
 
   const k=[
-    {l:"Active orders",v:totalOrders,s:`${onTrack} on track / complete`,c:""},
+    {l:"Orders in horizon",v:totalOrders,s:`${onTrack} on track / complete · ${DB.orders.length} total`,c:""},
     {l:"Pairs ordered",v:nf(totalPairs),s:`across ${DB.lines.length} lines`,c:""},
-    {l:"Produced to date",v:nf(totalProd),s:`<b>${pct}%</b> of order book`,c:"k-prod"},
+    {l:"Produced to date",v:nf(totalProd),s:`<b>${pct}%</b> of these orders`,c:"k-prod"},
     {l:"Need to produce",v:nf(totalNeed),s:"order qty − produced",c:"k-need"},
     {l:"Over-booked lines",v:overLines.size,s:overLines.size?"capacity breached":"all within capacity",c:"k-over"},
     {l:"Vacant lines",v:vacant,s:vacant?"available to book":"fully allocated",c:"k-vac"}
   ];
   document.getElementById("kpiGrid").innerHTML=k.map(x=>`<div class="kpi ${x.c}"><div class="kpi-label">${x.l}</div><div class="kpi-val">${x.v}</div><div class="kpi-sub">${x.s}</div></div>`).join("");
-  document.getElementById("deckDesc").textContent=`Bird's-eye view · ${({daily:"daily",weekly:"weekly",monthly:"monthly",quarterly:"quarterly",yearly:"yearly"})[state.horizon]} horizon`;
+  document.getElementById("deckDesc").textContent=`Bird's-eye view · ${HZ_LABEL[state.horizon]} horizon`;
   drawCharts(win);
 }
 function drawCharts(){
@@ -834,8 +860,12 @@ function renderBoard(){
   document.getElementById("roleHelpTxt").textContent=ROLE_HELP[state.role];
   document.getElementById("roBanner").classList.toggle("on",!state.editMode && state.role==="planning");
   const head=document.getElementById("boardHead"),body=document.getElementById("boardBody");
-  const orders=[...DB.orders].sort((a,b)=>parseD(a.delivery)-parseD(b.delivery));
-  if(!orders.length){body.innerHTML="";head.innerHTML="";document.getElementById("boardTable").innerHTML='<tbody><tr><td><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h18v18H3z"/></svg><div>No orders planned yet.</div></div></td></tr></tbody>';return;}
+  const w=horizonWindow(true);
+  const total=DB.orders.length;
+  const orders=ordersInHorizon().sort((a,b)=>parseD(a.delivery)-parseD(b.delivery));
+  const note=document.getElementById("boardHorizonNote");
+  if(note) note.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Horizon: <b>${w.label}</b> — showing order plans active through ${fmtShort(addD(w.end,-1))} (<b>${orders.length}</b> of ${total}). Change the horizon top-right.`;
+  if(!orders.length){head.innerHTML="";body.innerHTML=`<tr><td colspan="10"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h18v18H3z"/></svg><div>No order plans fall in the ${w.label} horizon. Pick a longer horizon to see more.</div></div></td></tr>`;return;}
   let cols,rows;
   if(state.role==="management"){
     cols=["PO","Buyer","Article","Order qty","Produced","Need to produce","Delivery","Status"];
@@ -922,8 +952,14 @@ function renderCapacity(){
 /* ================== RENDER: DAILY PRODUCTION ================== */
 function renderProduction(){
   const filter=document.getElementById("prodDateFilter").value;
+  const w=horizonWindow(false);
   let logs=[...DB.prod].sort((a,b)=>parseD(b.date)-parseD(a.date));
-  if(filter) logs=logs.filter(p=>p.date===filter);
+  if(filter){ logs=logs.filter(p=>p.date===filter); }
+  else { logs=logs.filter(p=>{const d=parseD(p.date); return d>=w.start && d<w.end;}); }
+  const note=document.getElementById("prodHorizonNote");
+  if(note) note.innerHTML=filter
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Showing a single day: <b>${filter}</b>. Press <b>All</b> to return to the horizon window.`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Horizon: <b>${w.label}</b> — last <b>${w.span}</b> of production. Change the horizon top-right, or jump to a day.`;
   const body=document.getElementById("prodBody");
   if(!logs.length){body.innerHTML=`<tr><td colspan="8"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div>No production logged${filter?" for this date":" yet"}.</div></div></td></tr>`;return;}
   body.innerHTML=logs.map(p=>{
@@ -1150,6 +1186,14 @@ function wire(){
   document.getElementById("p_order").addEventListener("change",prodHint);
   document.getElementById("prodSave").onclick=saveProd;
   document.getElementById("prodDateFilter").addEventListener("change",renderProduction);
+  const pdc=document.getElementById("prodDateClear");
+  if(pdc) pdc.onclick=()=>{ document.getElementById("prodDateFilter").value=""; renderProduction(); };
+  // make the whole date field pop the native calendar (so users tap, not type)
+  document.querySelectorAll('input[type="date"]').forEach(inp=>{
+    const open=()=>{ try{ inp.showPicker && inp.showPicker(); }catch(e){} };
+    inp.addEventListener("focus",open);
+    inp.addEventListener("click",open);
+  });
   // lines modal
   document.getElementById("lineAdd").onclick=()=>{
     const n=document.getElementById("l_name").value.trim(),t=document.getElementById("l_type").value,c=+document.getElementById("l_cap").value;
