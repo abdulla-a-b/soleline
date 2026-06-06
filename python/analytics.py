@@ -87,6 +87,32 @@ def index_production(prod):
     return by_order
 
 
+MAT_KEYS = ("upper", "sole", "trims")
+
+
+def material_status(o, key):
+    """Read a flattened material field (upper/sole/trims) or nested mat{}."""
+    if o.get(key) not in (None, ""):
+        v = str(o.get(key)).lower().strip()
+    else:
+        v = str((o.get("mat") or {}).get(key, "ok")).lower().strip()
+    if v.startswith("n") or v == "awaited":
+        return "none"
+    if v.startswith("p"):
+        return "part"
+    return "ok"
+
+
+def material_gap(o):
+    """Weighted shortage: awaited=2, partial=1, in-house=0."""
+    return sum({"none": 2, "part": 1}.get(material_status(o, k), 0) for k in MAT_KEYS)
+
+
+def material_short_count(o):
+    """Count of material groups not fully in-house."""
+    return sum(1 for k in MAT_KEYS if material_status(o, k) != "ok")
+
+
 def committed_on_day(orders, line_id, d):
     total = 0
     for o in orders:
@@ -169,6 +195,24 @@ def completion_forecast(orders, produced_by):
             else:
                 status = "on_track"
         pct = round((done / pairs) * 100) if pairs else 0
+        # ---- risk score (mirrors the dashboard Forecasting tab) ----
+        if need <= 0:
+            late_days = 0
+            risk = 0
+        else:
+            if proj_finish and proj_finish != "done":
+                late_days = max(0, (parse_d(proj_finish) - delivery).days)
+            else:
+                late_days = 999 if proj_finish is None else 0
+            if today > delivery:
+                sched = min(82, 58 + (today - delivery).days * 3)
+            else:
+                sched = min(68, late_days * 5)
+            mat = min(28, material_gap(o) * 7)
+            pace = (required / daily) if daily else 1.5
+            pace_risk = min(16, (pace - 1) * 22) if pace > 1 else 0
+            risk = min(100, round(sched + mat + pace_risk))
+        band = "high" if risk >= 67 else "medium" if risk >= 34 else "low"
         out.append({
             "orderId": o["id"], "po": o.get("po"), "buyer": o.get("buyer"),
             "article": o.get("article"), "lineId": o.get("lineId"),
@@ -177,11 +221,16 @@ def completion_forecast(orders, produced_by):
             "plannedDaily": daily, "requiredDaily": required,
             "projectedFinish": proj_finish, "delivery": delivery.isoformat(),
             "status": status,
+            "lateDays": late_days,
+            "material": {k: material_status(o, k) for k in MAT_KEYS},
+            "materialShort": material_short_count(o),
+            "riskScore": risk, "riskBand": band,
         })
     return out
 
 
 def headline(lines_risk, orders_fc, orders, produced_by):
+    open_fc = [o for o in orders_fc if o["needToProduce"] > 0]
     return {
         "totalOrders": len(orders),
         "totalPairs": sum(int(o.get("pairs") or 0) for o in orders),
@@ -190,6 +239,12 @@ def headline(lines_risk, orders_fc, orders, produced_by):
         "overbookedLines": sum(1 for l in lines_risk if l["status"] == "overbooked"),
         "vacantLines": sum(1 for l in lines_risk if l["status"] == "vacant"),
         "ordersAtRisk": sum(1 for o in orders_fc if o["status"] in ("at_risk", "overdue")),
+        "highRisk": sum(1 for o in open_fc if o["riskBand"] == "high"),
+        "mediumRisk": sum(1 for o in open_fc if o["riskBand"] == "medium"),
+        "projectedLate": sum(1 for o in open_fc if o["lateDays"] > 0),
+        "materialGaps": sum(o["materialShort"] for o in open_fc),
+        "openOrders": len(open_fc),
+        "avgRiskScore": round(sum(o["riskScore"] for o in open_fc) / len(open_fc)) if open_fc else 0,
     }
 
 
@@ -233,6 +288,9 @@ def main():
     print(f"[analytics] orders={h['totalOrders']} pairs={h['totalPairs']:,} "
           f"need={h['needToProduce']:,} overbooked_lines={h['overbookedLines']} "
           f"vacant_lines={h['vacantLines']} at_risk={h['ordersAtRisk']}")
+    print(f"[analytics] forecast: high={h['highRisk']} medium={h['mediumRisk']} "
+          f"projected_late={h['projectedLate']} material_gaps={h['materialGaps']} "
+          f"open={h['openOrders']} avg_risk={h['avgRiskScore']}")
 
 
 if __name__ == "__main__":
