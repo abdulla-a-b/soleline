@@ -1101,6 +1101,7 @@ function handleFile(file){
   r.readAsBinaryString(file);
 }
 async function pushToSheet(){
+  if(!state.editMode){ unlockPrompt(); return; }
   if(!state.url){ toast("Set the Apps Script URL in Settings","err"); return; }
   toast("Pushing to Google Sheet…");
   try{
