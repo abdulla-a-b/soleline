@@ -1,1 +1,47 @@
+name: SOLELINE analytics
 
+# Pulls the live board snapshot, recomputes capacity-risk + completion
+# forecasts, and commits data/insights.json so the dashboard can surface it.
+
+on:
+  schedule:
+    - cron: "30 1 * * *"      # 01:30 UTC daily  (~07:30 Bangladesh time)
+  workflow_dispatch:           # allow a manual run from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  analytics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run analytics
+        env:
+          SOLELINE_URL: ${{ secrets.SOLELINE_URL }}   # Apps Script /exec URL
+        run: |
+          if [ -n "$SOLELINE_URL" ]; then
+            python python/analytics.py --url "$SOLELINE_URL"
+          else
+            echo "SOLELINE_URL secret not set — falling back to data/board.json if present"
+            python python/analytics.py || true
+          fi
+
+      - name: Commit insights
+        run: |
+          git config user.name  "soleline-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/insights.json || true
+          if git diff --staged --quiet; then
+            echo "No changes to insights.json"
+          else
+            git commit -m "chore: refresh analytics insights [skip ci]"
+            git push
+          fi
