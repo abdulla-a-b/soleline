@@ -1190,6 +1190,7 @@ function wire(){
   document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".modal-bg.on").forEach(m=>m.classList.remove("on"));});
 }
 function openSettings(){
+  if(!state.editMode){ unlockPrompt(); return; }
   document.getElementById("s_url").value=state.url;
   document.getElementById("s_source").value=state.source;
   document.getElementById("s_idle").textContent=CONFIG.IDLE_MIN;
