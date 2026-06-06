@@ -252,6 +252,37 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1}
   background:rgba(224,164,88,.06);border:1px solid rgba(224,164,88,.16);border-radius:9px;padding:8px 12px}
 .horizon-note b{color:var(--leather-bright);font-weight:600}
 .horizon-note svg{width:15px;height:15px;color:var(--leather)}
+/* material in-house pills (Upper / Sole / Trims) */
+.matpill{display:inline-flex;gap:3px}
+.matpill i{font-style:normal;font-family:var(--mono);font-size:10px;font-weight:700;width:19px;height:19px;display:inline-flex;
+  align-items:center;justify-content:center;border-radius:6px;letter-spacing:0}
+.matpill i.m-ok{background:rgba(63,180,137,.16);color:var(--ok)}
+.matpill i.m-part{background:rgba(224,164,88,.18);color:var(--leather-bright)}
+.matpill i.m-none{background:rgba(229,84,78,.16);color:var(--danger)}
+.mat-legend{display:flex;gap:14px;font-size:11px;color:var(--muted);flex-wrap:wrap;align-items:center}
+.mat-legend b{font-family:var(--mono);font-weight:700;padding:1px 5px;border-radius:5px}
+/* forecasting */
+.fc-badge{display:inline-flex;gap:10px;font-size:11px;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:30px;padding:6px 13px}
+.fc-badge b{color:var(--ink)}
+.k-high::after{background:var(--danger)} .k-med::after{background:var(--leather)} .k-score::after{background:var(--violet)}
+.fc-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:18px;align-items:start}
+@media(max-width:1000px){.fc-grid{grid-template-columns:1fr}}
+.risk-pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-weight:700;font-size:12px}
+.risk-pill .rs{font-size:15px}
+.fc-late{color:var(--danger);font-weight:700;font-family:var(--mono);font-size:12px}
+.fc-ontime{color:var(--ok);font-weight:700;font-family:var(--mono);font-size:12px}
+.drivers{font-size:11px;color:var(--muted);line-height:1.5;max-width:230px}
+.line-card{background:linear-gradient(170deg,var(--panel),var(--bg2));border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:11px;
+  border-left:3px solid var(--border)}
+.line-card.high{border-left-color:var(--danger)} .line-card.med{border-left-color:var(--leather)} .line-card.low{border-left-color:var(--ok)}
+.line-card .lc-top{display:flex;justify-content:space-between;align-items:center}
+.line-card .lc-name{font-weight:700;font-size:14px}
+.line-card .lc-score{font-family:var(--mono);font-weight:800;font-size:20px}
+.line-card.high .lc-score{color:var(--danger)} .line-card.med .lc-score{color:var(--leather-bright)} .line-card.low .lc-score{color:var(--ok)}
+.line-card .lc-sub{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.03em}
+.cap-mat{display:flex;align-items:center;gap:8px;margin-top:7px}
+.cap-mat-txt{font-size:11px;color:var(--muted)}
+.cap-mat-txt.short{color:var(--leather-bright)}
 .btn-ghost{padding:11px 18px;border-radius:10px;font-weight:600;font-size:13px;background:var(--panel3);border:1px solid var(--border);color:var(--ink2)}
 .btn-ghost:hover{border-color:var(--border2)}
 .btn-go{padding:11px 20px;border-radius:10px;font-weight:700;font-size:13px;background:linear-gradient(135deg,var(--leather),var(--leather-dim));color:#19130A}
@@ -363,6 +394,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1}
     <button data-v="board"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg> Order Plan Board</button>
     <button data-v="capacity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg> Line Capacity</button>
     <button data-v="production"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Daily Production</button>
+    <button data-v="forecasting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg> Forecasting</button>
     <button data-v="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg> Reports &amp; Export</button>
   </nav>
 
@@ -452,6 +484,40 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1}
       </div>
     </section>
 
+    <!-- ===== FORECASTING ===== -->
+    <section class="view" id="v-forecasting">
+      <div class="view-head">
+        <div><div class="view-title">Forecasting</div><div class="view-desc" id="fcDesc">Risk &amp; forecast — AI / Python analysis across the selected horizon.</div></div>
+        <div class="fc-badge" id="fcBadge"></div>
+      </div>
+      <div class="help-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>Risk blends schedule (projected finish vs ship date), pace (required vs planned run-rate) and material readiness. The same model runs in <b>python/analytics.py</b> via GitHub Actions for the nightly report.</span></div>
+      <div class="kpi-grid" id="fcKpis"></div>
+
+      <div class="fc-grid">
+        <div class="panel" style="margin:0">
+          <div class="panel-head"><div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> PO delivery risk — projected vs ship date</div></div>
+          <div class="tbl-scroll"><table id="fcRiskTable"><thead><tr>
+            <th>Buyer</th><th>PO</th><th>Line</th><th class="num">Done</th><th>Ship</th><th>Proj. finish</th><th>Forecast</th><th>Material</th><th>Risk</th><th>Drivers</th>
+          </tr></thead><tbody id="fcRiskBody"></tbody></table></div>
+        </div>
+        <div>
+          <div class="panel" style="margin:0 0 18px">
+            <div class="panel-head"><div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg> Riskiest lines</div></div>
+            <div id="fcLineCards"></div>
+          </div>
+          <div class="panel" style="margin:0">
+            <div class="panel-head"><div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8"/><rect x="12" y="6" width="3" height="12"/><rect x="17" y="13" width="3" height="5"/></svg> Line risk</div></div>
+            <div class="chart-wrap sm"><canvas id="chartLineRisk"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg> Forecast horizon — planned vs projected output</div></div>
+        <div class="chart-wrap"><canvas id="chartForecast"></canvas></div>
+      </div>
+    </section>
+
     <!-- ===== REPORTS ===== -->
     <section class="view" id="v-reports">
       <div class="view-head"><div><div class="view-title">Reports &amp; Export</div><div class="view-desc">Bird's-eye management reports + the full data-upload toolkit.</div></div></div>
@@ -504,6 +570,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1}
         <div class="fg"><label>Daily target (pairs/day) <span class="req-flag">*</span></label><input id="f_daily" type="number" min="1" placeholder="1200"></div>
         <div class="fg"><label>Start date <span class="req-flag">*</span></label><input id="f_start" type="date"></div>
         <div class="fg"><label>Delivery date <span class="req-flag">*</span></label><input id="f_delivery" type="date"></div>
+        <div class="fg"><label>Upper — material in-house</label><select id="f_mat_upper"><option value="ok">In-house</option><option value="part">Partial</option><option value="none">Awaited</option></select></div>
+        <div class="fg"><label>Sole / bottom — in-house</label><select id="f_mat_sole"><option value="ok">In-house</option><option value="part">Partial</option><option value="none">Awaited</option></select></div>
+        <div class="fg"><label>Trims / components — in-house</label><select id="f_mat_trims"><option value="ok">In-house</option><option value="part">Partial</option><option value="none">Awaited</option></select></div>
       </div>
       <div class="ob-warn" id="obWarn">
         <div class="ob-warn-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> Over-book warning — this line exceeds capacity</div>
@@ -635,13 +704,13 @@ function seed(){
       {id:"L6",name:"Line 6",type:"Strobel",cap:2000}
     ],
     orders:[
-      {id:"O1",po:"PO-2026-0118",buyer:"Clarks",article:"Desert Boot",constr:"Goodyear Welt",pairs:18000,sizeRun:"UK 6–12",lineId:"L3",daily:850,start:iso(addD(t,-6)),delivery:iso(addD(t,18))},
-      {id:"O2",po:"PO-2026-0121",buyer:"Bata",article:"School Oxford",constr:"Cementing",pairs:42000,sizeRun:"EU 30–39",lineId:"L1",daily:1450,start:iso(addD(t,-10)),delivery:iso(addD(t,22))},
-      {id:"O3",po:"PO-2026-0125",buyer:"Deichmann",article:"Court Sneaker",constr:"Injection (DIP)",pairs:60000,sizeRun:"EU 36–46",lineId:"L5",daily:2100,start:iso(addD(t,-4)),delivery:iso(addD(t,26))},
-      {id:"O4",po:"PO-2026-0130",buyer:"Apex",article:"Loafer Slip-on",constr:"Cementing",pairs:21000,sizeRun:"EU 40–45",lineId:"L2",daily:1400,start:iso(addD(t,2)),delivery:iso(addD(t,20))},
-      {id:"O5",po:"PO-2026-0133",buyer:"Timberland",article:"Field Trainer",constr:"Vulcanised",pairs:30000,sizeRun:"US 7–13",lineId:"L4",daily:1700,start:iso(addD(t,-2)),delivery:iso(addD(t,16))},
-      {id:"O6",po:"PO-2026-0137",buyer:"Clarks",article:"Wallabee",constr:"Strobel",pairs:24000,sizeRun:"UK 5–11",lineId:"L6",daily:1900,start:iso(addD(t,-1)),delivery:iso(addD(t,12))},
-      {id:"O7",po:"PO-2026-0140",buyer:"Bata",article:"Sandal Comfit",constr:"Injection (DIP)",pairs:15000,sizeRun:"EU 36–42",lineId:"L5",daily:600,start:iso(addD(t,-4)),delivery:iso(addD(t,24))}
+      {id:"O1",po:"PO-2026-0118",buyer:"Clarks",article:"Desert Boot",constr:"Goodyear Welt",pairs:18000,sizeRun:"UK 6–12",lineId:"L3",daily:850,start:iso(addD(t,-6)),delivery:iso(addD(t,18)),mat:{upper:"ok",sole:"ok",trims:"part"}},
+      {id:"O2",po:"PO-2026-0121",buyer:"Bata",article:"School Oxford",constr:"Cementing",pairs:42000,sizeRun:"EU 30–39",lineId:"L1",daily:1450,start:iso(addD(t,-10)),delivery:iso(addD(t,22)),mat:{upper:"ok",sole:"ok",trims:"ok"}},
+      {id:"O3",po:"PO-2026-0125",buyer:"Deichmann",article:"Court Sneaker",constr:"Injection (DIP)",pairs:60000,sizeRun:"EU 36–46",lineId:"L5",daily:2100,start:iso(addD(t,-4)),delivery:iso(addD(t,26)),mat:{upper:"part",sole:"none",trims:"part"}},
+      {id:"O4",po:"PO-2026-0130",buyer:"Apex",article:"Loafer Slip-on",constr:"Cementing",pairs:21000,sizeRun:"EU 40–45",lineId:"L2",daily:1400,start:iso(addD(t,2)),delivery:iso(addD(t,20)),mat:{upper:"none",sole:"ok",trims:"ok"}},
+      {id:"O5",po:"PO-2026-0133",buyer:"Timberland",article:"Field Trainer",constr:"Vulcanised",pairs:30000,sizeRun:"US 7–13",lineId:"L4",daily:1700,start:iso(addD(t,-2)),delivery:iso(addD(t,16)),mat:{upper:"ok",sole:"part",trims:"ok"}},
+      {id:"O6",po:"PO-2026-0137",buyer:"Clarks",article:"Wallabee",constr:"Strobel",pairs:24000,sizeRun:"UK 5–11",lineId:"L6",daily:1900,start:iso(addD(t,-1)),delivery:iso(addD(t,12)),mat:{upper:"ok",sole:"ok",trims:"ok"}},
+      {id:"O7",po:"PO-2026-0140",buyer:"Bata",article:"Sandal Comfit",constr:"Injection (DIP)",pairs:15000,sizeRun:"EU 36–42",lineId:"L5",daily:600,start:iso(addD(t,-4)),delivery:iso(addD(t,24)),mat:{upper:"part",sole:"ok",trims:"none"}}
     ],
     prod:[]
   };
@@ -864,11 +933,11 @@ function renderBoard(){
   const total=DB.orders.length;
   const orders=ordersInHorizon().sort((a,b)=>parseD(a.delivery)-parseD(b.delivery));
   const note=document.getElementById("boardHorizonNote");
-  if(note) note.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Horizon: <b>${w.label}</b> — showing order plans active through ${fmtShort(addD(w.end,-1))} (<b>${orders.length}</b> of ${total}). Change the horizon top-right.`;
+  if(note) note.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Horizon: <b>${w.label}</b> — showing order plans active through ${fmtShort(addD(w.end,-1))} (<b>${orders.length}</b> of ${total}). &nbsp;Material in-house: <b>U</b> upper · <b>S</b> sole · <b>T</b> trims (<span style="color:var(--ok)">green</span>=in-house, <span style="color:var(--leather-bright)">amber</span>=partial, <span style="color:var(--danger)">red</span>=awaited).`;
   if(!orders.length){head.innerHTML="";body.innerHTML=`<tr><td colspan="10"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h18v18H3z"/></svg><div>No order plans fall in the ${w.label} horizon. Pick a longer horizon to see more.</div></div></td></tr>`;return;}
   let cols,rows;
   if(state.role==="management"){
-    cols=["PO","Buyer","Article","Order qty","Produced","Need to produce","Delivery","Status"];
+    cols=["PO","Buyer","Article","Order qty","Produced","Need to produce","Material","Delivery","Status"];
     rows=orders.map(o=>`<tr>
       <td class="cell-strong mono">${o.po}</td>
       <td><span class="buyer-tag"><span class="swatch" style="background:${buyerColor(o.buyer)}"></span>${o.buyer}</span></td>
@@ -876,10 +945,11 @@ function renderBoard(){
       <td class="num cell-strong">${nf(o.pairs)}</td>
       <td>${progressCell(o)}</td>
       <td class="num">${needCell(o)}</td>
+      <td>${matCell(o)}</td>
       <td class="mono">${fmtShort(parseD(o.delivery))}</td>
       <td>${statusBadge(o)}</td></tr>`);
   } else if(state.role==="planning"){
-    cols=["PO","Buyer","Line","Daily target","Window","Order qty","Produced","Need to produce","Capacity","Actions"];
+    cols=["PO","Buyer","Line","Daily target","Window","Order qty","Produced","Need to produce","Material","Capacity","Actions"];
     rows=orders.map(o=>{
       const ob=overbookScan(o.lineId,o.start,o.delivery,o.daily,o.id);
       const cap=ob.length?`<span class="badge b-danger">⚠ ${ob.length}d over</span>`:`<span class="badge b-ok">OK</span>`;
@@ -892,10 +962,11 @@ function renderBoard(){
       <td class="num">${nf(o.pairs)}</td>
       <td>${progressCell(o)}</td>
       <td class="num">${needCell(o)}</td>
+      <td>${matCell(o)}</td>
       <td>${cap}</td>
       <td><div style="display:flex;gap:6px"><button class="mini-btn" data-edit="${o.id}" ${state.editMode?"":"disabled"}>Edit</button><button class="mini-btn danger" data-del="${o.id}" ${state.editMode?"":"disabled"}>Del</button></div></td></tr>`;});
   } else { // operations
-    cols=["PO","Buyer","Line","Order qty","Produced","Need to produce","Daily target","Req. run-rate","Days left","Status"];
+    cols=["PO","Buyer","Line","Order qty","Produced","Need to produce","Daily target","Req. run-rate","Days left","Material","Status"];
     rows=orders.map(o=>{
       const rr=requiredRate(o),dl=daysLeft(o),behind=rr>o.daily&&needToProduce(o)>0;
       return `<tr>
@@ -908,6 +979,7 @@ function renderBoard(){
       <td class="num mono">${nf(o.daily)}</td>
       <td class="num"><span class="mono ${behind?"need-val":""}" style="${behind?"color:var(--danger);font-weight:700":""}">${needToProduce(o)<=0?"—":nf(rr)}</span></td>
       <td class="num mono">${dl}</td>
+      <td>${matCell(o)}</td>
       <td>${statusBadge(o)}</td></tr>`;});
   }
   head.innerHTML="<tr>"+cols.map(c=>`<th class="${/qty|target|Produced|produce|rate|left/i.test(c)?"num":""}">${c}</th>`).join("")+"</tr>";
@@ -933,8 +1005,11 @@ function renderCapacity(){
     const avg=totCap?Math.round(totCom/totCap*100):0; totalUtil.push(avg);
     if(lineOver)overCount++; if(!booked)vacantCount++;
     const tag=!booked?'<span class="badge b-violet">Vacant</span>':lineOver?'<span class="badge b-danger">Over-booked</span>':avg>85?'<span class="badge b-warn">Near full</span>':'<span class="badge b-ok">Healthy</span>';
+    const lm=lineMaterial(l.id);
+    const matTxt=lm.total?(lm.short?`<span class="cap-mat-txt short">${lm.short} of ${lm.total} PO material short</span>`:`<span class="cap-mat-txt">all materials in-house (${lm.total} PO)</span>`):`<span class="cap-mat-txt">no open PO</span>`;
     return `<div class="cap-line">
-      <div><div class="cap-name">${l.name} ${tag}</div><div class="cap-type">${l.type} · ${nf(l.cap)} pairs/day</div></div>
+      <div><div class="cap-name">${l.name} ${tag}</div><div class="cap-type">${l.type} · ${nf(l.cap)} pairs/day</div>
+        <div class="cap-mat">${matPills(lm.agg)} ${matTxt}</div></div>
       <div class="cap-days">${cells}</div>
       <div class="cap-stat"><div class="cs-util" style="color:${avg>100?"var(--danger)":avg>85?"var(--leather-bright)":avg>0?"var(--ok)":"var(--violet)"}">${avg}%</div><div class="cs-lbl">avg util</div></div>
     </div>`;
@@ -979,7 +1054,120 @@ function renderProduction(){
   body.querySelectorAll("[data-delp]").forEach(b=>b.onclick=()=>{ if(!state.editMode)return; DB.prod=DB.prod.filter(x=>x.id!==b.dataset.delp); persist(); renderAll(); toast("Output entry removed","ok"); });
 }
 
-function renderAll(){ renderDeck(); renderBoard(); renderCapacity(); renderProduction(); }
+/* ================== MATERIAL + RISK / FORECAST MODEL ================== */
+const MAT_KEYS=[["upper","U","Upper"],["sole","S","Sole"],["trims","T","Trims"]];
+const MAT_TXT={ok:"in-house",part:"partial",none:"awaited"};
+function matPills(m){m=m||{};return `<span class="matpill">`+MAT_KEYS.map(([k,ltr,nm])=>`<i class="m-${m[k]||"ok"}" title="${nm}: ${MAT_TXT[m[k]||"ok"]}">${ltr}</i>`).join("")+`</span>`;}
+function matCell(o){return matPills(o.mat||{});}
+function lineMaterial(lineId){
+  const os=DB.orders.filter(o=>o.lineId===lineId && needToProduce(o)>0);
+  const agg={upper:"ok",sole:"ok",trims:"ok"}; let short=0;
+  os.forEach(o=>{const m=o.mat||{}; let bad=false;
+    MAT_KEYS.forEach(([k])=>{const v=m[k]||"ok"; if(v==="none"){agg[k]="none";bad=true;} else if(v==="part"){if(agg[k]==="ok")agg[k]="part";bad=true;}});
+    if(bad)short++;});
+  return {agg,short,total:os.length};
+}
+function matGapCount(o){const m=o.mat||{};return MAT_KEYS.reduce((a,[k])=>a+(m[k]==="none"?2:m[k]==="part"?1:0),0);}
+function projFinish(o){let need=needToProduce(o);if(need<=0)return null;const rate=o.daily||1;let d=sod(new Date()),g=0;while(g<3000){if(d.getDay()!==5){need-=rate;if(need<=0)return new Date(d);}d=addD(d,1);g++;}return null;}
+function lateDays(o){if(needToProduce(o)<=0)return 0;const pf=projFinish(o);if(!pf)return 999;return Math.max(0,Math.round((pf-parseD(o.delivery))/DAY));}
+function riskScore(o){
+  if(needToProduce(o)<=0)return 0;
+  const today=sod(new Date()),del=parseD(o.delivery);
+  const sched=today>del?Math.min(82,58+Math.round((today-del)/DAY)*3):Math.min(68,lateDays(o)*5);
+  const mat=Math.min(28,matGapCount(o)*7);
+  const rr=requiredRate(o),pace=o.daily?rr/o.daily:1.5;
+  const paceRisk=pace>1?Math.min(16,(pace-1)*22):0;
+  return Math.min(100,Math.round(sched+mat+paceRisk));
+}
+function riskBand(s){return s>=67?{k:"high",l:"HIGH",cls:"b-danger"}:s>=34?{k:"med",l:"MED",cls:"b-warn"}:{k:"low",l:"LOW",cls:"b-ok"};}
+function riskDrivers(o){
+  const d=[],today=sod(new Date()),del=parseD(o.delivery),m=o.mat||{};
+  if(today>del&&needToProduce(o)>0)d.push("ship date passed");
+  else if(lateDays(o)>0)d.push(`projected ${lateDays(o)}d late`);
+  MAT_KEYS.forEach(([k,,nm])=>{ if(m[k]==="none")d.push(`${nm.toLowerCase()} not in-house`); else if(m[k]==="part")d.push(`${nm.toLowerCase()} partial`); });
+  const rr=requiredRate(o); if(needToProduce(o)>0&&rr>o.daily)d.push(`needs ${nf(rr)}/day vs ${nf(o.daily)}`);
+  if(!d.length)d.push("on track");
+  return d;
+}
+function lineRisk(lineId){
+  const os=DB.orders.filter(o=>o.lineId===lineId&&needToProduce(o)>0);
+  if(!os.length)return 0;
+  let w=0,r=0; os.forEach(o=>{const n=needToProduce(o);w+=n;r+=riskScore(o)*n;});
+  return w?Math.round(r/w):0;
+}
+function recentPace(o){
+  const ps=DB.prod.filter(p=>p.orderId===o.id).sort((a,b)=>parseD(b.date)-parseD(a.date)).slice(0,7);
+  if(!ps.length)return Math.round((o.daily||0)*0.92);
+  return Math.round(ps.reduce((a,p)=>a+(+p.pairs||0),0)/ps.length);
+}
+function forecastSeries(){
+  const bk=horizonBuckets(true), planned=bk.map(()=>0), projected=bk.map(()=>0);
+  const rem={},pace={}; DB.orders.forEach(o=>{rem[o.id]=needToProduce(o);pace[o.id]=recentPace(o);});
+  bk.forEach((b,bi)=>{ let d=new Date(b.start);
+    while(d<b.end){ if(d.getDay()!==5){ DB.orders.forEach(o=>{ if(parseD(o.start)<=d&&d<=parseD(o.delivery)){ planned[bi]+=o.daily; if(rem[o.id]>0){const add=Math.min(rem[o.id],pace[o.id]);projected[bi]+=add;rem[o.id]-=add;} } }); } d=addD(d,1); } });
+  return {labels:bk.map(b=>b.label),planned,projected};
+}
+
+/* ================== RENDER: FORECASTING ================== */
+let fcharts={};
+function renderForecasting(){
+  const scope=ordersInHorizon().filter(o=>needToProduce(o)>0), today=sod(new Date());
+  const bands=scope.map(o=>riskBand(riskScore(o)).k);
+  const high=bands.filter(b=>b==="high").length, med=bands.filter(b=>b==="med").length;
+  const late=scope.filter(o=>lateDays(o)>0||today>parseD(o.delivery)).length;
+  const matGaps=scope.reduce((a,o)=>a+MAT_KEYS.reduce((s,[k])=>s+((o.mat&&o.mat[k]&&o.mat[k]!=="ok")?1:0),0),0);
+  const open=scope.length, avg=open?Math.round(scope.reduce((a,o)=>a+riskScore(o),0)/open):0;
+  document.getElementById("fcKpis").innerHTML=[
+    {l:"High-risk POs",v:high,s:"need pre-action",c:"k-high"},
+    {l:"Medium risk",v:med,s:"monitor closely",c:"k-med"},
+    {l:"Projected late",v:late,s:"vs ship date",c:"k-over"},
+    {l:"Material gaps",v:matGaps,s:"upper / sole / trims short",c:"k-need"},
+    {l:"Open orders",v:open,s:"in this horizon",c:"k-prod"},
+    {l:"Avg risk score",v:avg,s:"0 = safe · 100 = critical",c:"k-score"}
+  ].map(x=>`<div class="kpi ${x.c}"><div class="kpi-label">${x.l}</div><div class="kpi-val">${x.v}</div><div class="kpi-sub">${x.s}</div></div>`).join("");
+  document.getElementById("fcBadge").innerHTML=`<span><b>${high}</b> high</span><span><b>${med}</b> medium</span><span><b>${late}</b> late</span>`;
+  document.getElementById("fcDesc").textContent=`Risk & forecast — AI / Python analysis · ${HZ_LABEL[state.horizon]} horizon`;
+  const rows=[...scope].sort((a,b)=>riskScore(b)-riskScore(a));
+  const body=document.getElementById("fcRiskBody");
+  if(!rows.length){ body.innerHTML=`<tr><td colspan="10"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 6 9 17l-5-5"/></svg><div>No open orders at risk in the ${HZ_LABEL[state.horizon]} horizon.</div></div></td></tr>`; }
+  else body.innerHTML=rows.map(o=>{
+    const s=riskScore(o),bd=riskBand(s),pf=projFinish(o),ld=lateDays(o),done=o.pairs?Math.round(produced(o.id)/o.pairs*100):0;
+    const fc=ld>0?`<span class="fc-late">+${ld}d late</span>`:`<span class="fc-ontime">on time</span>`;
+    const col=bd.k==="high"?"var(--danger)":bd.k==="med"?"var(--leather-bright)":"var(--ok)";
+    return `<tr>
+      <td><span class="buyer-tag"><span class="swatch" style="background:${buyerColor(o.buyer)}"></span>${o.buyer}</span></td>
+      <td class="cell-strong mono">${o.po}</td>
+      <td>${lineById(o.lineId).name}</td>
+      <td class="num mono">${done}%</td>
+      <td class="mono">${fmtShort(parseD(o.delivery))}</td>
+      <td class="mono">${pf?fmtShort(pf):"—"}</td>
+      <td>${fc}</td>
+      <td>${matCell(o)}</td>
+      <td><span class="risk-pill" style="color:${col}"><span class="rs">${s}</span> <span class="badge ${bd.cls}">${bd.l}</span></span></td>
+      <td><div class="drivers">${riskDrivers(o).join(" · ")}</div></td></tr>`;
+  }).join("");
+  const lr=DB.lines.map(l=>({l,r:lineRisk(l.id)})).filter(x=>x.r>0).sort((a,b)=>b.r-a.r).slice(0,3);
+  const lc=document.getElementById("fcLineCards");
+  lc.innerHTML=lr.length?lr.map(x=>{const bd=riskBand(x.r),os=DB.orders.filter(o=>o.lineId===x.l.id&&needToProduce(o)>0),hi=os.filter(o=>riskBand(riskScore(o)).k==="high").length;
+    return `<div class="line-card ${bd.k}"><div class="lc-top"><span class="lc-name">${x.l.name}</span><span class="lc-score">${x.r}</span></div><div class="lc-sub">${os.length} open · ${hi} high-risk · ${x.l.type}</div></div>`;
+  }).join(""):`<div class="cell-mut" style="padding:6px 2px">No lines carrying risk right now.</div>`;
+  drawForecastCharts();
+}
+function drawForecastCharts(){
+  Object.values(fcharts).forEach(c=>c&&c.destroy()); fcharts={};
+  const grid="#293340";
+  const lines=DB.lines.map(l=>({name:l.name,r:lineRisk(l.id)})).sort((a,b)=>b.r-a.r);
+  fcharts.lineRisk=new Chart(document.getElementById("chartLineRisk"),{type:"bar",data:{labels:lines.map(l=>l.name),datasets:[{data:lines.map(l=>l.r),
+    backgroundColor:lines.map(l=>l.r>=67?"#E5544E":l.r>=34?"#E0A458":l.r>0?"#3FB489":"#36424F"),borderRadius:5}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>"risk "+c.raw}}},scales:{x:{grid:{color:grid},max:100,ticks:{stepSize:20}},y:{grid:{display:false}}}}});
+  const fs=forecastSeries();
+  fcharts.forecast=new Chart(document.getElementById("chartForecast"),{type:"line",data:{labels:fs.labels,datasets:[
+    {label:"Planned",data:fs.planned,borderColor:"#5B9BD5",backgroundColor:"rgba(91,155,213,.08)",tension:.35,fill:true,borderWidth:2,pointRadius:0},
+    {label:"AI-projected (current pace)",data:fs.projected,borderColor:"#A78BFA",backgroundColor:"rgba(167,139,250,.08)",borderDash:[6,4],tension:.35,fill:false,borderWidth:2.5,pointRadius:0}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:12,usePointStyle:true}}},scales:{x:{grid:{color:grid}},y:{grid:{color:grid},ticks:{callback:v=>nf(v)}}}}});
+}
+
+function renderAll(){ renderDeck(); renderBoard(); renderCapacity(); renderProduction(); renderForecasting(); }
 
 /* ================== ORDER MODAL + OVERBOOK WARNING ================== */
 let editingOrderId=null;
@@ -995,9 +1183,11 @@ function openOrder(id){
     g("f_po").value=o.po; g("f_buyer").value=o.buyer; g("f_article").value=o.article||""; g("f_constr").value=o.constr;
     g("f_pairs").value=o.pairs; g("f_sizerun").value=o.sizeRun||""; g("f_line").value=o.lineId; g("f_daily").value=o.daily;
     g("f_start").value=o.start; g("f_delivery").value=o.delivery;
+    const m=o.mat||{}; g("f_mat_upper").value=m.upper||"ok"; g("f_mat_sole").value=m.sole||"ok"; g("f_mat_trims").value=m.trims||"ok";
   } else {
     ["f_po","f_buyer","f_article","f_sizerun"].forEach(x=>g(x).value="");
     g("f_pairs").value=""; g("f_daily").value=""; g("f_start").value=iso(sod(new Date())); g("f_delivery").value=iso(addD(new Date(),21));
+    g("f_mat_upper").value="ok"; g("f_mat_sole").value="ok"; g("f_mat_trims").value="ok";
   }
   checkOverbook();
   document.getElementById("orderModal").classList.add("on");
@@ -1027,7 +1217,8 @@ function saveOrder(){
   if(ob.length){
     if(!confirm(`⚠ Over-book warning\n\n${lineById(line).name} exceeds capacity on ${ob.length} day(s) with this plan.\nMax overage: +${nf(Math.max(...ob.map(x=>x.over)))} pairs/day.\n\nCommit anyway? (Cancel to adjust the line, dates or daily target.)`)) return;
   }
-  const rec={po,buyer,article:g("f_article"),constr:g("f_constr"),pairs,sizeRun:g("f_sizerun"),lineId:line,daily,start,delivery:del};
+  const rec={po,buyer,article:g("f_article"),constr:g("f_constr"),pairs,sizeRun:g("f_sizerun"),lineId:line,daily,start,delivery:del,
+    mat:{upper:g("f_mat_upper"),sole:g("f_mat_sole"),trims:g("f_mat_trims")}};
   if(editingOrderId){ Object.assign(DB.orders.find(x=>x.id===editingOrderId),rec); toast("Order plan updated","ok"); }
   else { rec.id="O"+Date.now().toString(36); DB.orders.push(rec); toast(ob.length?"Committed past capacity — flagged":"Order plan committed","ok"); }
   persist(); document.getElementById("orderModal").classList.remove("on"); renderAll();
@@ -1080,8 +1271,8 @@ function exportXlsx(){
     ["Lines",DB.lines.length]];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(totals),"Summary");
   // order board
-  const ob=[["PO","Buyer","Article","Construction","Line","Order qty","Daily target","Produced","Need to produce","Start","Delivery","Status"]];
-  DB.orders.forEach(o=>ob.push([o.po,o.buyer,o.article,o.constr,lineById(o.lineId).name,o.pairs,o.daily,produced(o.id),needToProduce(o),o.start,o.delivery,orderStatus(o).label]));
+  const ob=[["PO","Buyer","Article","Construction","Line","Order qty","Daily target","Produced","Need to produce","Upper","Sole","Trims","Start","Delivery","Status"]];
+  DB.orders.forEach(o=>{const m=o.mat||{};ob.push([o.po,o.buyer,o.article,o.constr,lineById(o.lineId).name,o.pairs,o.daily,produced(o.id),needToProduce(o),MAT_TXT[m.upper||"ok"],MAT_TXT[m.sole||"ok"],MAT_TXT[m.trims||"ok"],o.start,o.delivery,orderStatus(o).label]);});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ob),"Order Board");
   // capacity
   const today=sod(new Date());
@@ -1104,7 +1295,7 @@ function exportCsv(){
 }
 function downloadTemplates(){
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["po","buyer","article","construction","line","order_qty","daily_target","start","delivery"],["PO-2026-XXXX","Clarks","Desert Boot","Goodyear Welt","Line 3",18000,850,iso(new Date()),iso(addD(new Date(),21))]]),"Orders");
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["po","buyer","article","construction","line","order_qty","daily_target","start","delivery","upper","sole","trims"],["PO-2026-XXXX","Clarks","Desert Boot","Goodyear Welt","Line 3",18000,850,iso(new Date()),iso(addD(new Date(),21)),"ok","ok","part"]]),"Orders");
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["po","date","pairs_produced"],["PO-2026-XXXX",iso(new Date()),850]]),"Daily Production");
   XLSX.writeFile(wb,"SOLELINE_upload_templates.xlsx");
   toast("Templates downloaded","ok");
@@ -1122,7 +1313,8 @@ function handleFile(file){
           const k=Object.fromEntries(Object.entries(row).map(([a,b])=>[a.toString().toLowerCase().trim(),b]));
           if(k.order_qty!==undefined&&k.po){ // order row
             const line=DB.lines.find(l=>l.name.toLowerCase()===String(k.line).toLowerCase())||DB.lines[0];
-            DB.orders.push({id:"O"+Math.random().toString(36).slice(2,9),po:String(k.po),buyer:String(k.buyer||"—"),article:String(k.article||""),constr:String(k.construction||"Cementing"),pairs:+k.order_qty||0,sizeRun:"",lineId:line.id,daily:+k.daily_target||0,start:String(k.start||iso(new Date())).slice(0,10),delivery:String(k.delivery||iso(addD(new Date(),21))).slice(0,10)});
+            const ms=v=>{v=String(v||"").toLowerCase().trim();return v.startsWith("n")||v==="awaited"?"none":v.startsWith("p")?"part":"ok";};
+            DB.orders.push({id:"O"+Math.random().toString(36).slice(2,9),po:String(k.po),buyer:String(k.buyer||"—"),article:String(k.article||""),constr:String(k.construction||"Cementing"),pairs:+k.order_qty||0,sizeRun:"",lineId:line.id,daily:+k.daily_target||0,start:String(k.start||iso(new Date())).slice(0,10),delivery:String(k.delivery||iso(addD(new Date(),21))).slice(0,10),mat:{upper:ms(k.upper),sole:ms(k.sole),trims:ms(k.trims)}});
             addedO++;
           } else if((k.pairs_produced!==undefined||k.pairs!==undefined)&&(k.po||k.order)){ // production row
             const po=String(k.po||k.order), o=DB.orders.find(x=>x.po.toLowerCase()===po.toLowerCase());
@@ -1140,8 +1332,9 @@ async function pushToSheet(){
   if(!state.editMode){ unlockPrompt(); return; }
   if(!state.url){ toast("Set the Apps Script URL in Settings","err"); return; }
   toast("Pushing to Google Sheet…");
+  const flatOrders=DB.orders.map(o=>{const m=o.mat||{};return Object.assign({},o,{upper:m.upper||"ok",sole:m.sole||"ok",trims:m.trims||"ok"});});
   try{
-    await fetch(state.url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"push",orders:DB.orders,prod:DB.prod,lines:DB.lines})});
+    await fetch(state.url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"push",orders:flatOrders,prod:DB.prod,lines:DB.lines})});
     toast("Pushed to Google Sheet","ok");
   }catch(e){ toast("Push failed — check the URL / deployment","err"); }
 }
@@ -1149,7 +1342,10 @@ async function pullFromSheet(){
   if(!state.url) return false;
   try{
     const r=await fetch(state.url+"?action=pull"); const d=await r.json();
-    if(d&&d.lines&&d.lines.length){ DB=d; persist(); return true; }
+    if(d&&d.lines&&d.lines.length){
+      (d.orders||[]).forEach(o=>{ if(!o.mat) o.mat={upper:o.upper||"ok",sole:o.sole||"ok",trims:o.trims||"ok"}; });
+      DB=d; persist(); return true;
+    }
   }catch(e){}
   return false;
 }
