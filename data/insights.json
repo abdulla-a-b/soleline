@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-06-07T05:57:57.181260+00:00",
+  "horizonDays": 30,
+  "headline": {
+    "totalOrders": 0,
+    "totalPairs": 0,
+    "totalProduced": 0,
+    "needToProduce": 0,
+    "overbookedLines": 0,
+    "vacantLines": 0,
+    "ordersAtRisk": 0,
+    "highRisk": 0,
+    "mediumRisk": 0,
+    "projectedLate": 0,
+    "materialGaps": 0,
+    "openOrders": 0,
+    "avgRiskScore": 0
+  },
+  "lineCapacity": [],
+  "orderForecast": [],
+  "alerts": []
+}
